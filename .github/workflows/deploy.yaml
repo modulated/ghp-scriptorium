@@ -1,6 +1,43 @@
-steps:
-  - uses: actions/checkout@v4
-    with:
-      submodules: recursive  # This pulls the submodule automatically
-      fetch-depth: 0
-      token: ${{ secrets.VAULT_PAT }}
+name: Deploy Quartz
+
+on:
+  push:
+    branches: [v4]
+  repository_dispatch:
+    types: [vault-updated]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.VAULT_PAT }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm ci
+      - run: npx quartz build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
