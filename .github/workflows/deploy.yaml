@@ -1,0 +1,6 @@
+steps:
+  - uses: actions/checkout@v4
+    with:
+      submodules: recursive  # This pulls the submodule automatically
+      fetch-depth: 0
+      token: ${{ secrets.VAULT_PAT }}
